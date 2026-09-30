@@ -1,0 +1,38 @@
+workflows:
+  android-debug:
+    name: Nep Tourna Android APK
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      node: latest
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm ci
+
+      - name: Build web application
+        script: |
+          npm run build
+
+      - name: Create Android project with Capacitor
+        script: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+      - name: Sync Capacitor Android
+        script: |
+          npx cap sync android
+
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+
+      - name: Build Android debug APK
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+    artifacts:
+      - android/app/build/outputs/apk/debug/app-debug.apk
